@@ -18,9 +18,14 @@ let showingOriginal = false;
 let originalLocked = false;
 let isProcessing = false;
 let currentFilename = "processed-image.png";
+
 let lastTapTime = 0;
 let holdActive = false;
 let holdPointerId = null;
+let holdStarted = false;
+let pendingTapTimer = null;
+
+const DOUBLE_TAP_DELAY = 350;
 
 function showMessage(text, isError = false) {
     message.textContent = text;
@@ -40,10 +45,10 @@ function updateStatus() {
         status.textContent = "Processing...";
     } else if (!originalImage) {
         status.textContent = "Waiting";
+    } else if (showingOriginal && originalLocked) {
+        status.textContent = "Original Locked";
     } else if (showingOriginal) {
-        status.textContent = originalLocked
-            ? "Original Locked"
-            : "Original Image";
+        status.textContent = "Original Image";
     } else {
         status.textContent = "Processed Image";
     }
@@ -77,11 +82,17 @@ function enableTools(enabled) {
 }
 
 function resetComparison() {
+    if (pendingTapTimer) {
+        clearTimeout(pendingTapTimer);
+        pendingTapTimer = null;
+    }
+
     originalLocked = false;
+    showingOriginal = false;
     holdActive = false;
     holdPointerId = null;
+    holdStarted = false;
     lastTapTime = 0;
-    showingOriginal = false;
 }
 
 // Upload an image
@@ -113,8 +124,13 @@ imageInput.addEventListener("change", async () => {
             throw new Error(data.error || "Upload failed.");
         }
 
+        if (!data.image) {
+            throw new Error("The server did not return an image.");
+        }
+
         originalImage = data.image;
         processedImage = data.image;
+
         resetComparison();
 
         currentFilename =
@@ -129,6 +145,7 @@ imageInput.addEventListener("change", async () => {
 
         enableTools(true);
         updateStatus();
+
         showMessage(
             "Image uploaded successfully. Choose a processing operation."
         );
@@ -139,7 +156,7 @@ imageInput.addEventListener("change", async () => {
     }
 });
 
-// Apply a filter through the Flask backend
+// Apply a selected processing operation
 toolButtons.forEach(button => {
     button.addEventListener("click", async () => {
         const operation = button.dataset.operation;
@@ -149,6 +166,7 @@ toolButtons.forEach(button => {
         isProcessing = true;
         enableTools(true);
         updateStatus();
+
         showMessage(`Applying ${button.textContent}...`);
 
         try {
@@ -173,7 +191,9 @@ toolButtons.forEach(button => {
             }
 
             if (!data.image) {
-                throw new Error("The server did not return a processed image.");
+                throw new Error(
+                    "The server did not return a processed image."
+                );
             }
 
             processedImage = data.image;
@@ -181,6 +201,7 @@ toolButtons.forEach(button => {
 
             updatePreview();
             updateStatus();
+
             showMessage(`${button.textContent} applied successfully.`);
 
         } catch (error) {
@@ -196,7 +217,7 @@ toolButtons.forEach(button => {
     });
 });
 
-// Show Original: hold temporarily, or double-tap to lock
+// Show Original button: press-and-hold or double-tap to lock
 compareBtn.addEventListener("pointerdown", event => {
     if (compareBtn.disabled || isProcessing) return;
 
@@ -204,20 +225,30 @@ compareBtn.addEventListener("pointerdown", event => {
 
     const now = Date.now();
     const isDoubleTap =
-        lastTapTime !== 0 && now - lastTapTime <= 350;
-
-    lastTapTime = now;
+        lastTapTime > 0 &&
+        now - lastTapTime <= DOUBLE_TAP_DELAY;
 
     if (isDoubleTap) {
-        // Prevent the second tap from acting like a temporary hold.
+        if (pendingTapTimer) {
+            clearTimeout(pendingTapTimer);
+            pendingTapTimer = null;
+        }
+
+        lastTapTime = 0;
         holdActive = false;
+        holdStarted = false;
         holdPointerId = null;
+
         originalLocked = !originalLocked;
 
         if (originalLocked) {
             showOriginal();
+            showMessage(
+                "Original image locked. Double-tap again to return."
+            );
         } else {
             showProcessed();
+            showMessage("Showing processed image.");
         }
 
         try {
@@ -227,14 +258,13 @@ compareBtn.addEventListener("pointerdown", event => {
         return;
     }
 
+    lastTapTime = now;
     holdActive = true;
+    holdStarted = false;
     holdPointerId = event.pointerId;
 
-    if (originalLocked) {
-        showOriginal();
-    } else {
-        showOriginal();
-    }
+    // Show the original immediately while the button is held.
+    showOriginal();
 
     try {
         compareBtn.setPointerCapture(event.pointerId);
@@ -255,6 +285,7 @@ function finishHold(event) {
     holdActive = false;
     holdPointerId = null;
 
+    // Keep the original visible if it has been locked by double-tapping.
     if (!originalLocked) {
         showProcessed();
     }
@@ -281,7 +312,7 @@ downloadBtn.addEventListener("click", () => {
     link.remove();
 });
 
-// Reset the workspace
+// Reset the entire workspace
 resetBtn.addEventListener("click", () => {
     imageInput.value = "";
     originalImage = "";
@@ -304,7 +335,7 @@ resetBtn.addEventListener("click", () => {
     showMessage("Upload an image to get started.");
 });
 
-// Update intensity display
+// Update intensity value
 intensity.addEventListener("input", () => {
     intensityValue.textContent = intensity.value;
 });
