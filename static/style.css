@@ -4,12 +4,12 @@
 }
 
 :root {
-    --background: #0b1020;
-    --panel: #141b2e;
-    --border: #28334b;
-    --text: #f1f5ff;
-    --muted: #9aa8c1;
-    --accent: #7c83ff;
+    --background: #f7f5ff;
+    --panel: #ffffff;
+    --border: #e4def5;
+    --text: #29243b;
+    --muted: #817995;
+    --accent: #8870d9;
 }
 
 body {
@@ -25,7 +25,7 @@ body {
     align-items: center;
     padding: 18px 5%;
     border-bottom: 1px solid var(--border);
-    background: #10172a;
+    background: #ffffff;
 }
 
 .brand {
@@ -40,6 +40,7 @@ body {
     width: 48px;
     height: 48px;
     background: var(--accent);
+    color: #ffffff;
     border-radius: 13px;
     font-weight: 800;
 }
@@ -73,7 +74,7 @@ h1 {
 }
 
 .eyebrow {
-    color: #9a9fff;
+    color: #8067ce;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -95,6 +96,7 @@ h1 {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(92, 70, 145, 0.05);
 }
 
 .workspace {
@@ -120,8 +122,8 @@ h1 {
 .status {
     padding: 7px 11px;
     border-radius: 20px;
-    background: #26304b;
-    color: #c2caff;
+    background: #eee9ff;
+    color: #6c55b0;
     font-size: 11px;
 }
 
@@ -131,10 +133,10 @@ h1 {
     min-height: 390px;
     padding: 20px;
     overflow: hidden;
-    background-color: #0b1020;
-    background-image: radial-gradient(#26304b 1px, transparent 1px);
+    background-color: #faf9ff;
+    background-image: radial-gradient(#ddd5f3 1px, transparent 1px);
     background-size: 18px 18px;
-    border: 1px dashed #39445f;
+    border: 1px dashed #c9bde9;
     border-radius: 12px;
 }
 
@@ -165,6 +167,10 @@ h1 {
     border-radius: 5px;
 }
 
+#previewImage[hidden] {
+    display: none;
+}
+
 .preview-actions {
     display: flex;
     flex-wrap: wrap;
@@ -184,25 +190,25 @@ button, .upload-btn {
 }
 
 button:disabled {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: not-allowed;
 }
 
 .primary-btn, .upload-btn {
     display: inline-block;
     background: var(--accent);
-    color: white;
+    color: #ffffff;
     text-align: center;
 }
 
 .secondary-btn {
-    background: #242e46;
-    color: var(--text);
-    border: 1px solid #34405c;
+    background: #f0ecfb;
+    color: #554481;
+    border: 1px solid #ded5f2;
 }
 
 button:not(:disabled):hover, .upload-btn:hover {
-    filter: brightness(1.15);
+    filter: brightness(0.96);
 }
 
 .tool-category {
@@ -211,7 +217,7 @@ button:not(:disabled):hover, .upload-btn:hover {
 
 .tool-category h4 {
     margin-bottom: 10px;
-    color: #aab4d0;
+    color: #796b9b;
     font-size: 11px;
     letter-spacing: 1px;
 }
@@ -225,11 +231,16 @@ button:not(:disabled):hover, .upload-btn:hover {
 .tool-btn {
     min-height: 43px;
     padding: 10px;
-    background: #1b253b;
-    border: 1px solid #303d58;
-    color: #dbe4fa;
+    background: #f8f6ff;
+    border: 1px solid #e4def5;
+    color: #51466e;
     text-align: left;
     font-size: 12px;
+}
+
+.tool-btn:not(:disabled):hover {
+    background: #eee8ff;
+    border-color: #b8a7e8;
 }
 
 .intensity-control {
@@ -247,7 +258,7 @@ button:not(:disabled):hover, .upload-btn:hover {
 }
 
 .intensity-control span {
-    color: #b4b7ff;
+    color: #725bc0;
     font-size: 13px;
 }
 
@@ -271,7 +282,7 @@ button:not(:disabled):hover, .upload-btn:hover {
 }
 
 .message.error {
-    color: #ff8c9c;
+    color: #c23c5a;
 }
 
 footer {
@@ -304,10 +315,4 @@ footer {
     .panel {
         padding: 14px;
     }
-}
-
-.tool-btn.active {
-    border-color: #7c83ff;
-    background: #30365f;
-    color: #ffffff;
 }
