@@ -10,103 +10,88 @@ const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 const intensity = document.getElementById("intensity");
 const intensityValue = document.getElementById("intensityValue");
-const toolButtons = [...document.querySelectorAll(".tool-btn")];
-
-const operations = {
-    "Grayscale": "grayscale",
-    "Negative": "negative",
-    "RGB Channels": "red",
-    "Average Blur": "average_blur",
-    "Gaussian Blur": "gaussian_blur",
-    "Median Blur": "median_blur",
-    "Bilateral Blur": "bilateral_blur",
-    "Sharpen": "sharpen",
-    "Unsharp Mask": "unsharp_mask",
-    "Sobel": "sobel",
-    "Canny": "canny",
-    "Laplacian": "laplacian",
-    "Brightness": "brightness",
-    "Contrast": "contrast",
-    "Threshold": "threshold",
-    "Histogram Equalization": "histogram_equalization"
-};
+const toolButtons = document.querySelectorAll(".tool-btn");
 
 let originalImage = "";
 let processedImage = "";
-let currentFilename = "processed-image.png";
 let showingOriginal = false;
-let selectedOperation = null;
-let processing = false;
+let originalLocked = false;
+let isProcessing = false;
+let currentFilename = "processed-image.png";
+let lastTapTime = 0;
+let holdActive = false;
+let holdPointerId = null;
 
 function showMessage(text, isError = false) {
     message.textContent = text;
     message.classList.toggle("error", isError);
 }
 
-function setToolsEnabled(enabled) {
-    toolButtons.forEach(button => {
-        button.disabled = !enabled;
-    });
+function updatePreview() {
+    if (!originalImage || !processedImage) return;
 
-    intensity.disabled = !enabled;
+    previewImage.src = showingOriginal
+        ? originalImage
+        : processedImage;
 }
 
-function showCurrentImage() {
-    previewImage.src = showingOriginal ? originalImage : processedImage;
-    compareBtn.textContent = showingOriginal
-        ? "Show Processed Image"
-        : "Show Original";
-
-    status.textContent = showingOriginal
-        ? "Original Image"
-        : selectedOperation
-            ? "Processed Image"
+function updateStatus() {
+    if (isProcessing) {
+        status.textContent = "Processing...";
+    } else if (!originalImage) {
+        status.textContent = "Waiting";
+    } else if (showingOriginal) {
+        status.textContent = originalLocked
+            ? "Original Locked"
             : "Original Image";
-}
-
-async function runProcessing() {
-    if (!originalImage || !selectedOperation || processing) return;
-
-    processing = true;
-    status.textContent = "Processing...";
-    showMessage("Applying " + selectedOperation.replaceAll("_", " ") + "...");
-
-    try {
-        const response = await fetch("/process", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                image: originalImage,
-                operation: selectedOperation,
-                intensity: Number(intensity.value)
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Processing failed.");
-        }
-
-        processedImage = data.image;
-        showingOriginal = false;
-        showCurrentImage();
-        showMessage("Processing completed successfully.");
-    } catch (error) {
-        showMessage(error.message, true);
-        status.textContent = "Error";
-    } finally {
-        processing = false;
+    } else {
+        status.textContent = "Processed Image";
     }
 }
 
+function showOriginal() {
+    if (!originalImage || !processedImage) return;
+
+    showingOriginal = true;
+    updatePreview();
+    updateStatus();
+}
+
+function showProcessed() {
+    if (!originalImage || !processedImage) return;
+
+    showingOriginal = false;
+    updatePreview();
+    updateStatus();
+}
+
+function enableTools(enabled) {
+    toolButtons.forEach(button => {
+        button.disabled = !enabled || isProcessing;
+    });
+
+    intensity.disabled = !enabled || isProcessing;
+    compareBtn.disabled = !enabled || isProcessing;
+    downloadBtn.disabled = !enabled || isProcessing;
+    resetBtn.disabled = isProcessing;
+}
+
+function resetComparison() {
+    originalLocked = false;
+    holdActive = false;
+    holdPointerId = null;
+    lastTapTime = 0;
+    showingOriginal = false;
+}
+
+// Upload an image
 imageInput.addEventListener("change", async () => {
     const file = imageInput.files[0];
+
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
         showMessage("Please select a valid image.", true);
-        imageInput.value = "";
         return;
     }
 
@@ -114,8 +99,7 @@ imageInput.addEventListener("change", async () => {
     formData.append("image", file);
 
     status.textContent = "Uploading...";
-    showMessage("Uploading image...");
-    setToolsEnabled(false);
+    showMessage("Uploading and validating your image...");
 
     try {
         const response = await fetch("/upload", {
@@ -131,97 +115,196 @@ imageInput.addEventListener("change", async () => {
 
         originalImage = data.image;
         processedImage = data.image;
-        selectedOperation = null;
-        showingOriginal = false;
+        resetComparison();
 
         currentFilename =
             file.name.replace(/\.[^.]+$/, "") + "-processed.png";
 
-        previewImage.src = originalImage;
+        previewImage.src = processedImage;
         previewImage.hidden = false;
         emptyState.hidden = true;
 
         imageInfo.textContent =
             `${data.width} × ${data.height} pixels · ${file.name}`;
 
-        compareBtn.disabled = false;
-        downloadBtn.disabled = false;
-        setToolsEnabled(true);
+        enableTools(true);
+        updateStatus();
+        showMessage(
+            "Image uploaded successfully. Choose a processing operation."
+        );
 
-        status.textContent = "Image Loaded";
-        showMessage("Image ready. Select a processing operation.");
     } catch (error) {
-        showMessage(error.message, true);
+        showMessage(error.message || "Unable to upload the image.", true);
         status.textContent = "Upload Failed";
     }
 });
 
+// Apply a filter through the Flask backend
 toolButtons.forEach(button => {
     button.addEventListener("click", async () => {
-        if (!originalImage) return;
+        const operation = button.dataset.operation;
 
-        const operation = operations[button.textContent.trim()];
+        if (!originalImage || isProcessing) return;
 
-        if (!operation) {
-            showMessage("This operation is not configured yet.", true);
-            return;
+        isProcessing = true;
+        enableTools(true);
+        updateStatus();
+        showMessage(`Applying ${button.textContent}...`);
+
+        try {
+            const response = await fetch("/process", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    image: originalImage,
+                    operation: operation,
+                    intensity: Number(intensity.value)
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Image processing failed."
+                );
+            }
+
+            if (!data.image) {
+                throw new Error("The server did not return a processed image.");
+            }
+
+            processedImage = data.image;
+            resetComparison();
+
+            updatePreview();
+            updateStatus();
+            showMessage(`${button.textContent} applied successfully.`);
+
+        } catch (error) {
+            showMessage(
+                error.message || "Image processing failed.",
+                true
+            );
+        } finally {
+            isProcessing = false;
+            enableTools(Boolean(originalImage));
+            updateStatus();
         }
-
-        selectedOperation = operation;
-        showingOriginal = false;
-
-        toolButtons.forEach(item => item.classList.remove("active"));
-        button.classList.add("active");
-
-        await runProcessing();
     });
 });
 
-intensity.addEventListener("input", () => {
-    intensityValue.textContent = intensity.value;
+// Show Original: hold temporarily, or double-tap to lock
+compareBtn.addEventListener("pointerdown", event => {
+    if (compareBtn.disabled || isProcessing) return;
+
+    event.preventDefault();
+
+    const now = Date.now();
+    const isDoubleTap =
+        lastTapTime !== 0 && now - lastTapTime <= 350;
+
+    lastTapTime = now;
+
+    if (isDoubleTap) {
+        // Prevent the second tap from acting like a temporary hold.
+        holdActive = false;
+        holdPointerId = null;
+        originalLocked = !originalLocked;
+
+        if (originalLocked) {
+            showOriginal();
+        } else {
+            showProcessed();
+        }
+
+        try {
+            compareBtn.setPointerCapture(event.pointerId);
+        } catch (_) {}
+
+        return;
+    }
+
+    holdActive = true;
+    holdPointerId = event.pointerId;
+
+    if (originalLocked) {
+        showOriginal();
+    } else {
+        showOriginal();
+    }
+
+    try {
+        compareBtn.setPointerCapture(event.pointerId);
+    } catch (_) {}
 });
 
-intensity.addEventListener("change", runProcessing);
+function finishHold(event) {
+    if (!holdActive) return;
 
-compareBtn.addEventListener("click", () => {
-    if (!originalImage) return;
+    if (
+        event &&
+        holdPointerId !== null &&
+        event.pointerId !== holdPointerId
+    ) {
+        return;
+    }
 
-    showingOriginal = !showingOriginal;
-    showCurrentImage();
+    holdActive = false;
+    holdPointerId = null;
+
+    if (!originalLocked) {
+        showProcessed();
+    }
+}
+
+compareBtn.addEventListener("pointerup", finishHold);
+compareBtn.addEventListener("pointercancel", finishHold);
+compareBtn.addEventListener("lostpointercapture", finishHold);
+
+compareBtn.addEventListener("contextmenu", event => {
+    event.preventDefault();
 });
 
+// Download the processed image
 downloadBtn.addEventListener("click", () => {
     if (!processedImage) return;
 
     const link = document.createElement("a");
     link.href = processedImage;
     link.download = currentFilename;
+
+    document.body.appendChild(link);
     link.click();
+    link.remove();
 });
 
+// Reset the workspace
 resetBtn.addEventListener("click", () => {
     imageInput.value = "";
     originalImage = "";
     processedImage = "";
-    selectedOperation = null;
-    showingOriginal = false;
+
+    resetComparison();
 
     previewImage.src = "";
     previewImage.hidden = true;
     emptyState.hidden = false;
 
     imageInfo.textContent = "No image uploaded";
-    status.textContent = "Waiting";
-    compareBtn.textContent = "Show Original";
-    compareBtn.disabled = true;
-    downloadBtn.disabled = true;
 
     intensity.value = 50;
     intensityValue.textContent = "50";
 
-    toolButtons.forEach(button => button.classList.remove("active"));
-    setToolsEnabled(false);
+    enableTools(false);
+    updateStatus();
+
     showMessage("Upload an image to get started.");
 });
 
-setToolsEnabled(false);
+// Update intensity display
+intensity.addEventListener("input", () => {
+    intensityValue.textContent = intensity.value;
+});
