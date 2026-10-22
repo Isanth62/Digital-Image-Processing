@@ -27,8 +27,10 @@
             <h2>Transform your images.</h2>
             <p>Upload an image and explore image-processing techniques.</p>
         </div>
+
         <label for="imageInput" class="upload-btn">+ Upload Image</label>
-        <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" hidden>
+        <input type="file" id="imageInput"
+               accept="image/png,image/jpeg,image/webp" hidden>
     </section>
 
     <div id="message" class="message">Upload an image to get started.</div>
@@ -50,12 +52,13 @@
                     <p>Choose a PNG, JPG, JPEG, or WEBP image.</p>
                     <label for="imageInput" class="secondary-btn">Choose Image</label>
                 </div>
+
                 <img id="previewImage" alt="Image preview" hidden>
             </div>
 
             <div class="preview-actions">
                 <button id="compareBtn" class="secondary-btn" disabled>
-                    Show Original
+                    <strong>Show Original</strong>
                 </button>
                 <button id="downloadBtn" class="primary-btn" disabled>
                     Download Image
@@ -74,54 +77,46 @@
             <div class="tool-category">
                 <h4>BASIC PROCESSING</h4>
                 <div class="tool-grid">
-                    <button class="tool-btn" disabled>Grayscale</button>
-                    <button class="tool-btn" disabled>Negative</button>
-                    <button class="tool-btn" disabled>RGB Channels</button>
+                    <button class="tool-btn" data-operation="grayscale" disabled>Grayscale</button>
+                    <button class="tool-btn" data-operation="brightness" disabled>Brightness</button>
+                    <button class="tool-btn" data-operation="contrast" disabled>Contrast</button>
+                    <button class="tool-btn" data-operation="negative" disabled>Negative</button>
                 </div>
             </div>
 
             <div class="tool-category">
                 <h4>BLUR FILTERS</h4>
                 <div class="tool-grid">
-                    <button class="tool-btn" disabled>Average Blur</button>
-                    <button class="tool-btn" disabled>Gaussian Blur</button>
-                    <button class="tool-btn" disabled>Median Blur</button>
-                    <button class="tool-btn" disabled>Bilateral Blur</button>
+                    <button class="tool-btn" data-operation="average_blur" disabled>Average Blur</button>
+                    <button class="tool-btn" data-operation="gaussian_blur" disabled>Gaussian Blur</button>
+                    <button class="tool-btn" data-operation="median_blur" disabled>Median Blur</button>
+                    <button class="tool-btn" data-operation="bilateral_blur" disabled>Bilateral Blur</button>
                 </div>
             </div>
 
             <div class="tool-category">
                 <h4>SHARPENING</h4>
                 <div class="tool-grid">
-                    <button class="tool-btn" disabled>Sharpen</button>
-                    <button class="tool-btn" disabled>Unsharp Mask</button>
+                    <button class="tool-btn" data-operation="sharpen" disabled>Sharpen</button>
+                    <button class="tool-btn" data-operation="unsharp_mask" disabled>Unsharp Mask</button>
                 </div>
             </div>
 
             <div class="tool-category">
                 <h4>EDGE DETECTION</h4>
                 <div class="tool-grid">
-                    <button class="tool-btn" disabled>Sobel</button>
-                    <button class="tool-btn" disabled>Canny</button>
-                    <button class="tool-btn" disabled>Laplacian</button>
-                </div>
-            </div>
-
-            <div class="tool-category">
-                <h4>ENHANCEMENT</h4>
-                <div class="tool-grid">
-                    <button class="tool-btn" disabled>Brightness</button>
-                    <button class="tool-btn" disabled>Contrast</button>
-                    <button class="tool-btn" disabled>Threshold</button>
-                    <button class="tool-btn" disabled>Histogram Equalization</button>
+                    <button class="tool-btn" data-operation="sobel" disabled>Sobel</button>
+                    <button class="tool-btn" data-operation="canny" disabled>Canny</button>
+                    <button class="tool-btn" data-operation="laplacian" disabled>Laplacian</button>
                 </div>
             </div>
 
             <div class="intensity-control">
                 <label for="intensity">Intensity</label>
                 <span id="intensityValue">50</span>
-                <input type="range" id="intensity" min="0" max="100" value="50" disabled>
-                <p>Processing controls will be enabled after integration.</p>
+                <input type="range" id="intensity"
+                       min="0" max="100" value="50" disabled>
+                <p>Adjust the intensity before applying an operation.</p>
             </div>
         </aside>
     </section>
