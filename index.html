@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Image Processing Studio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="brand">
+        <div class="logo">DIP</div>
+        <div>
+            <h1>Image Processing Studio</h1>
+            <p>Enhance. Analyze. Transform.</p>
+        </div>
+    </div>
+    <button id="resetBtn" class="secondary-btn">Reset</button>
+</header>
+
+<main class="container">
+    <section class="welcome">
+        <div>
+            <p class="eyebrow">DIGITAL IMAGE PROCESSING</p>
+            <h2>Transform your images.</h2>
+            <p>Upload an image and explore image-processing techniques.</p>
+        </div>
+        <label for="imageInput" class="upload-btn">+ Upload Image</label>
+        <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" hidden>
+    </section>
+
+    <div id="message" class="message">Upload an image to get started.</div>
+
+    <section class="workspace">
+        <div class="preview-panel panel">
+            <div class="panel-heading">
+                <div>
+                    <h3>Image Preview</h3>
+                    <p id="imageInfo">No image uploaded</p>
+                </div>
+                <span id="status" class="status">Waiting</span>
+            </div>
+
+            <div class="image-stage">
+                <div id="emptyState">
+                    <div class="image-icon">▧</div>
+                    <h3>Your image goes here</h3>
+                    <p>Choose a PNG, JPG, JPEG, or WEBP image.</p>
+                    <label for="imageInput" class="secondary-btn">Choose Image</label>
+                </div>
+                <img id="previewImage" alt="Image preview" hidden>
+            </div>
+
+            <div class="preview-actions">
+                <button id="compareBtn" class="secondary-btn" disabled>
+                    Show Original
+                </button>
+                <button id="downloadBtn" class="primary-btn" disabled>
+                    Download Image
+                </button>
+            </div>
+        </div>
+
+        <aside class="tools-panel panel">
+            <div class="panel-heading">
+                <div>
+                    <h3>Processing Tools</h3>
+                    <p>Select an operation</p>
+                </div>
+            </div>
+
+            <div class="tool-category">
+                <h4>BASIC PROCESSING</h4>
+                <div class="tool-grid">
+                    <button class="tool-btn" disabled>Grayscale</button>
+                    <button class="tool-btn" disabled>Negative</button>
+                    <button class="tool-btn" disabled>RGB Channels</button>
+                </div>
+            </div>
+
+            <div class="tool-category">
+                <h4>BLUR FILTERS</h4>
+                <div class="tool-grid">
+                    <button class="tool-btn" disabled>Average Blur</button>
+                    <button class="tool-btn" disabled>Gaussian Blur</button>
+                    <button class="tool-btn" disabled>Median Blur</button>
+                    <button class="tool-btn" disabled>Bilateral Blur</button>
+                </div>
+            </div>
+
+            <div class="tool-category">
+                <h4>SHARPENING</h4>
+                <div class="tool-grid">
+                    <button class="tool-btn" disabled>Sharpen</button>
+                    <button class="tool-btn" disabled>Unsharp Mask</button>
+                </div>
+            </div>
+
+            <div class="tool-category">
+                <h4>EDGE DETECTION</h4>
+                <div class="tool-grid">
+                    <button class="tool-btn" disabled>Sobel</button>
+                    <button class="tool-btn" disabled>Canny</button>
+                    <button class="tool-btn" disabled>Laplacian</button>
+                </div>
+            </div>
+
+            <div class="tool-category">
+                <h4>ENHANCEMENT</h4>
+                <div class="tool-grid">
+                    <button class="tool-btn" disabled>Brightness</button>
+                    <button class="tool-btn" disabled>Contrast</button>
+                    <button class="tool-btn" disabled>Threshold</button>
+                    <button class="tool-btn" disabled>Histogram Equalization</button>
+                </div>
+            </div>
+
+            <div class="intensity-control">
+                <label for="intensity">Intensity</label>
+                <span id="intensityValue">50</span>
+                <input type="range" id="intensity" min="0" max="100" value="50" disabled>
+                <p>Processing controls will be enabled after integration.</p>
+            </div>
+        </aside>
+    </section>
+
+    <footer>
+        Digital Image Processing Studio · Academic Mini Project
+    </footer>
+</main>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
